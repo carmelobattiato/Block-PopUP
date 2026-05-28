@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block PopUP — self-test</title>
+<style>
+  :root {
+    --accent: #2f6df6;
+    --danger: #e5484d;
+    --bg: #f6f7f9;
+    --card: #fff;
+    --ink: #1a1d21;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a; --card: #1d2125; --ink: #e9edf1;
+      --muted: #9aa3ad; --line: #2c3137;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 64px;
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .card h2 { font-size: 14px; margin: 0 0 6px; }
+  .card p { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    border: 0; border-radius: 10px; padding: 9px 14px;
+    background: var(--accent); color: #fff; width: 100%;
+  }
+  button:hover { filter: brightness(1.05); }
+  button.allow { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .log {
+    margin-top: 28px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 16px; font: 12px/1.6 ui-monospace, Menlo, monospace;
+    white-space: pre-wrap; min-height: 64px; color: var(--muted);
+  }
+  .note {
+    margin-top: 18px; font-size: 12px; color: var(--muted);
+    border-left: 3px solid var(--accent); padding-left: 12px;
+  }
+  a.magnet { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>🛡️ Block PopUP — self-test</h1>
+  <p class="sub">Open this file directly (no server, no external URLs). Each button triggers one
+    popup mechanism. With the extension on, a card should appear and the toolbar counter rise.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>window.open</h2>
+      <p>Plain script-driven popup.</p>
+      <button data-test="open">Trigger window.open</button>
+    </div>
+
+    <div class="card">
+      <h2>window.open (features)</h2>
+      <p>Sized popup window with features string.</p>
+      <button data-test="open-features">Trigger sized popup</button>
+    </div>
+
+    <div class="card">
+      <h2>Delayed open</h2>
+      <p>Fires 1.2s later — no user gesture.</p>
+      <button data-test="delayed">Schedule delayed popup</button>
+    </div>
+
+    <div class="card">
+      <h2>Burst</h2>
+      <p>Five popups in a row (tests max-notifications / dedup).</p>
+      <button data-test="burst">Open 5 popups</button>
+    </div>
+
+    <div class="card">
+      <h2>target="_blank" link</h2>
+      <p>Programmatic anchor click.</p>
+      <button data-test="anchor">Click _blank anchor</button>
+    </div>
+
+    <div class="card">
+      <h2>form submit _blank</h2>
+      <p>Form submitted to a new context.</p>
+      <button data-test="form">Submit _blank form</button>
+    </div>
+
+    <div class="card">
+      <h2>Allowed: magnet</h2>
+      <p>Whitelisted protocol — must NOT be blocked.</p>
+      <a class="magnet" href="magnet:?xt=urn:btih:0000000000000000000000000000000000000000" target="_blank">Open magnet link</a>
+    </div>
+
+    <div class="card">
+      <h2>Allowed: real gesture</h2>
+      <p>Direct open inside the click handler — genuine intent.</p>
+      <button class="allow" data-test="gesture">Open (should pass)</button>
+    </div>
+  </div>
+
+  <div class="note">
+    Tip: set a small <strong>max notifications</strong> in Options to see dedup/cap on the “Burst”
+    test, and try <strong>Always block this site</strong> — the card disappears but the counter keeps rising.
+  </div>
+
+  <div class="log" id="log">Results appear here…</div>
+</main>
+
+<form id="probe-form" method="get" action="about:blank" target="_blank" style="display:none">
+  <input type="hidden" name="popup" value="1">
+</form>
+
+<script>
+  const log = document.getElementById('log');
+  const ts = () => new Date().toLocaleTimeString();
+  const line = msg => { log.textContent = `[${ts()}] ${msg}\n` + log.textContent; };
+
+  // about:blank keeps everything local; a blocked popup returns null/placeholder.
+  const TARGET = 'about:blank';
+
+  const tryOpen = (label, ...args) => {
+    const w = window.open(...args);
+    line(`${label} → window.open returned ${w ? 'a window object' : 'null (blocked)'}`);
+  };
+
+  const actions = {
+    open: () => tryOpen('window.open', TARGET, '_blank'),
+    'open-features': () => tryOpen('sized popup', TARGET, 'popup1', 'width=480,height=360,left=120,top=120'),
+    delayed: () => {
+      line('delayed popup scheduled (1.2s)…');
+      setTimeout(() => tryOpen('delayed', TARGET, '_blank'), 1200);
+    },
+    burst: () => {
+      for (let i = 1; i <= 5; i++) tryOpen('burst #' + i, TARGET, 'b' + i);
+    },
+    anchor: () => {
+      const a = document.createElement('a');
+      a.href = TARGET; a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      line('anchor[target=_blank] clicked');
+    },
+    form: () => {
+      document.getElementById('probe-form').submit();
+      line('form[target=_blank] submitted');
+    },
+    gesture: () => tryOpen('genuine gesture', TARGET, '_blank')
+  };
+
+  document.querySelectorAll('button[data-test]').forEach(btn => {
+    btn.addEventListener('click', () => actions[btn.dataset.test]());
+  });
+
+  document.querySelector('a.magnet').addEventListener('click', () => {
+    line('magnet link clicked — expected: allowed (no card)');
+  });
+</script>
+</body>
+</html>

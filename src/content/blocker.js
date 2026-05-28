@@ -1,4 +1,4 @@
-/* global config, navigation */
+/* global config, navigation, PPolicy */
 
 /* Block PopUP — ISOLATED world.
  *
@@ -140,9 +140,6 @@
     return href;
   };
 
-  const matchesHost = (host, list) =>
-    list.some(h => host === h || host.endsWith('.' + h) || h.endsWith('.' + host));
-
   const namesExistingFrame = name => {
     if (!name) {
       return false;
@@ -166,51 +163,23 @@
     return false;
   };
 
-  /* decide whether a new-context request should be blocked */
+  const topHostname = () => {
+    try {
+      return window.top.location.hostname;
+    }
+    catch (e) {
+      return ''; // cross-origin top
+    }
+  };
+
+  /* decide whether a new-context request should be blocked. The pure rule
+     engine lives in policy.js; here we add the DOM-bound side effects. */
   const decide = req => {
-    let href = req.href || '';
-    let block = true;
-
-    if (req.kind !== 'open' && namesExistingFrame(req.target)) {
-      block = false; // really a frame navigation
-    }
-    if (req.prevented) {
-      block = false; // the page already handled the event
-    }
-    if (req.modifier && req.trusted) {
-      block = false; // deliberate ctrl/cmd-click to open a new tab
-    }
-    if (req.tag === 'A' && req.download) {
-      block = false; // a download, not a popup
-    }
-
-    let hostname = '';
-    if (block) {
-      href = absolute(href);
-      if (href) {
-        try {
-          const u = new URL(href);
-          hostname = u.hostname;
-          if (settings.protocols.includes(u.protocol)) {
-            block = false;
-          }
-          if (block && hostname && matchesHost(hostname, settings['popup-hosts'])) {
-            block = false;
-          }
-          if (block && settings.domain) {
-            try {
-              const top = window.top.location.hostname;
-              if (top && hostname && matchesHost(hostname, [top])) {
-                block = false;
-              }
-            }
-            catch (e) { /* cross-origin top */ }
-          }
-        }
-        catch (e) { /* unparsable href (e.g. about:blank) -> keep blocking */ }
-      }
-    }
-
+    const {href, hostname, block} = PPolicy.verdict(req, settings, {
+      absolute,
+      frameExists: namesExistingFrame,
+      topHostname
+    });
     const id = newId();
     if (req.kind === 'open') {
       store[id] = [];

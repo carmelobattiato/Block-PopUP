@@ -5,6 +5,8 @@
 **A strict, modern popup blocker for Chrome & Edge (Manifest V3).**
 Intercepts popups *before* they open — no tracking, no external calls, no build step.
 
+[![CI](https://github.com/carmelobattiato/Block-PopUP/actions/workflows/ci.yml/badge.svg)](https://github.com/carmelobattiato/Block-PopUP/actions/workflows/ci.yml)
+
 <br/>
 
 </div>
@@ -125,16 +127,36 @@ src/
 │  └─ badge.js                  # toolbar icon state + per-tab blocked counter
 ├─ content/
 │  ├─ page-hook.js              # MAIN world — hooks the popup APIs
-│  ├─ blocker.js                # ISOLATED world — policy, redirect guard, record/replay
+│  ├─ blocker.js                # ISOLATED world — redirect guard, record/replay, messaging
+│  ├─ policy.js                 # pure block-decision engine (unit-tested)
 │  ├─ notification.js           # ISOLATED world — Shadow-DOM notification card
 │  ├─ disabled.js               # marks excluded top sites
 │  └─ probe.js                  # validates match patterns
 ├─ action/                      # toolbar panel (popup.html/js/css) + tld.js
 ├─ options/                     # options page (options.html/js/css)
 └─ assets/icons/                # 16–512 + per-state toolbar icons
+test/
+├─ popups.html                  # local self-test page (no external URLs)
+└─ policy.test.js               # unit tests for the block-decision engine
 ```
 
 **Tech:** Manifest V3 · vanilla JavaScript (ESM where native) · no bundler · no runtime dependencies.
+
+---
+
+## 🧪 Testing
+
+- **Manual:** load the extension, then open **`test/popups.html`** directly in the browser and click each
+  trigger (`window.open`, `target=_blank` link, form submit, delayed, burst, magnet, genuine gesture).
+- **Unit (no install needed):** the pure block-decision engine in `src/content/policy.js` is covered by
+  `test/policy.test.js`:
+  ```bash
+  npm test          # node --test
+  npm run lint      # syntax-check every JS file
+  npm run validate  # validate manifest.json
+  ```
+- **CI:** every push / PR runs lint + manifest validation + unit tests via GitHub Actions; tagging `v*`
+  builds a packaged `block-popup-<tag>.zip`.
 
 ---
 

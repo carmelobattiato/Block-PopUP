@@ -1,0 +1,14 @@
+{
+  "name": "block-popup",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Strictly block popup requests on any website before they open.",
+  "license": "MIT",
+  "author": "Carmelo Battiato",
+  "homepage": "https://github.com/carmelobattiato/Block-PopUP",
+  "scripts": {
+    "test": "node --test",
+    "lint": "find src -name '*.js' -print0 | xargs -0 -n1 node --check",
+    "validate": "node -e \"JSON.parse(require('fs').readFileSync('manifest.json','utf8'));console.log('manifest.json OK')\""
+  }
+}

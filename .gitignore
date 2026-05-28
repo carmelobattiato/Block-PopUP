@@ -1,0 +1,36 @@
+# ── Local helper scripts & their config (not part of the extension) ──
+github.sh
+backup.sh
+.github_push_config
+
+# ── Working notes / internal docs ──
+docs/
+
+# ── Claude / tooling state ──
+.claude/
+
+# ── Logs ──
+*.log
+logs/
+npm-debug.log*
+yarn-error.log*
+
+# ── OS junk ──
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Dependencies / build artifacts (none used, kept as a safety net) ──
+node_modules/
+dist/
+build/
+*.zip

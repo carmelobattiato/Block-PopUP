@@ -1,0 +1,52 @@
+{
+  "name": "Block PopUP",
+  "description": "Strictly block popup requests on any website before they open.",
+  "version": "0.1",
+  "manifest_version": 3,
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "action": {
+    "default_popup": "/src/action/popup.html"
+  },
+  "icons": {
+    "16": "/src/assets/icons/16.png",
+    "32": "/src/assets/icons/32.png",
+    "48": "/src/assets/icons/48.png",
+    "64": "/src/assets/icons/64.png",
+    "128": "/src/assets/icons/128.png",
+    "256": "/src/assets/icons/256.png",
+    "512": "/src/assets/icons/512.png"
+  },
+  "options_ui": {
+    "page": "/src/options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "_execute_action": {
+      "description": "Open the Block PopUP toolbar panel"
+    },
+    "allow-last-request": {
+      "description": "Allow the last popup request"
+    },
+    "deny-last-request": {
+      "description": "Dismiss the last popup request"
+    },
+    "background-last-request": {
+      "description": "Open the last popup request in a background tab"
+    },
+    "redirect-last-request": {
+      "description": "Open the last popup request in the current tab"
+    },
+    "focus-last-request": {
+      "description": "Focus the last popup notification"
+    }
+  }
+}

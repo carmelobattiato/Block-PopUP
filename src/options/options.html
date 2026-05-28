@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Block PopUP — Options</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="page">
+    <header class="page-head">
+      <h1>Block PopUP</h1>
+      <p class="sub">Options</p>
+    </header>
+
+    <!-- General -->
+    <section class="card">
+      <h2 class="card-title">General</h2>
+
+      <div class="row row-switch">
+        <label for="enabled" class="row-label">
+          <span class="label-main">Enable Block PopUP</span>
+          <span class="label-hint">Master on/off switch for the blocker</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="enabled">
+          <span class="track"></span>
+        </span>
+      </div>
+
+      <div class="row row-switch">
+        <label for="issue" class="row-label">
+          <span class="label-main">Show notification popups</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="issue">
+          <span class="track"></span>
+        </span>
+      </div>
+
+      <div class="row row-switch">
+        <label for="badge" class="row-label">
+          <span class="label-main">Show blocked count on the icon</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="badge">
+          <span class="track"></span>
+        </span>
+      </div>
+
+      <div class="row">
+        <label for="badge-color" class="row-label">
+          <span class="label-main">Badge color</span>
+        </label>
+        <input type="color" id="badge-color" class="color">
+      </div>
+
+      <div class="row">
+        <label for="placement" class="row-label">
+          <span class="label-main">Notification position</span>
+        </label>
+        <select id="placement" class="select">
+          <option value="tl">Top left</option>
+          <option value="tr">Top right</option>
+          <option value="bl">Bottom left</option>
+          <option value="br">Bottom right</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="default-action" class="row-label">
+          <span class="label-main">Default action</span>
+        </label>
+        <select id="default-action" class="select">
+          <option value="ignore">Do nothing</option>
+          <option value="popup-close">Close</option>
+          <option value="block-host">Block this site</option>
+          <option value="open-tab">Open in background tab</option>
+          <option value="popup-redirect">Open in this tab</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="timeout" class="row-label">
+          <span class="label-main">Auto-resolve after</span>
+          <span class="label-hint">Seconds; then the default action runs</span>
+        </label>
+        <input type="number" id="timeout" class="number" min="1" step="1">
+      </div>
+
+      <div class="row">
+        <label for="numbers" class="row-label">
+          <span class="label-main">Max notifications shown at once</span>
+        </label>
+        <input type="number" id="numbers" class="number" min="1" step="1">
+      </div>
+
+      <div class="row">
+        <label for="width" class="row-label">
+          <span class="label-main">Notification width</span>
+          <span class="label-hint">Pixels</span>
+        </label>
+        <input type="number" id="width" class="number" min="300" step="1">
+      </div>
+    </section>
+
+    <!-- Domain lists -->
+    <section class="card">
+      <h2 class="card-title">Domain lists</h2>
+      <p class="card-hint">One hostname per line, or comma separated.</p>
+
+      <div class="field">
+        <label for="popup-hosts" class="field-label">Allowed popup sources</label>
+        <span class="field-hint">These domains may open popups everywhere.</span>
+        <textarea id="popup-hosts" class="textarea" rows="4" spellcheck="false"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="top-hosts" class="field-label">Disabled on these sites</label>
+        <span class="field-hint">The blocker is turned off on these sites.</span>
+        <textarea id="top-hosts" class="textarea" rows="4" spellcheck="false"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="block-hosts" class="field-label">Always-blocked domains</label>
+        <span class="field-hint">Blocked silently — counter only, no notification.</span>
+        <textarea id="block-hosts" class="textarea" rows="4" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <!-- Redirect protection -->
+    <section class="card">
+      <h2 class="card-title">Redirect protection</h2>
+
+      <div class="row row-switch">
+        <label for="block-page-redirection" class="row-label">
+          <span class="label-main">Block page redirection</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="block-page-redirection">
+          <span class="track"></span>
+        </span>
+      </div>
+
+      <div class="row row-switch">
+        <label for="block-automated-redirection" class="row-label">
+          <span class="label-main">Also block automated (non-user) redirects</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="block-automated-redirection">
+          <span class="track"></span>
+        </span>
+      </div>
+
+      <div class="row row-switch">
+        <label for="block-page-redirection-same-origin" class="row-label">
+          <span class="label-main">Allow same-origin redirects</span>
+          <span class="label-hint">When on, redirects within the same origin are not blocked</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="block-page-redirection-same-origin">
+          <span class="track"></span>
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="block-page-redirection-hostnames" class="field-label">Also block redirects to these hostnames</label>
+        <textarea id="block-page-redirection-hostnames" class="textarea" rows="3" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <!-- Backup -->
+    <section class="card">
+      <h2 class="card-title">Backup</h2>
+      <p class="card-hint">Export or import all settings, or reset everything to defaults.</p>
+      <div class="btn-row">
+        <button type="button" id="export" class="btn">Export</button>
+        <button type="button" id="import" class="btn">Import</button>
+        <button type="button" id="reset" class="btn btn-danger">Reset to defaults</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
+    </section>
+
+    <footer class="actionbar">
+      <span id="status" class="status" role="status" aria-live="polite"></span>
+      <button type="button" id="save" class="btn btn-primary">Save</button>
+    </footer>
+  </main>
+
+  <footer class="page-credit">
+    <a href="https://github.com/carmelobattiato/Block-PopUP" target="_blank" rel="noopener noreferrer">Block PopUP — by Carmelo Battiato</a>
+  </footer>
+
+  <script src="/src/background/config.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

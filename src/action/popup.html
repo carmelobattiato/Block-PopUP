@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="popup.css">
+  <script src="/src/background/config.js"></script>
+  <script src="tld.js"></script>
+  <script type="module" src="popup.js"></script>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="head">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
+        <div class="brand-text">
+          <h1>Block PopUP</h1>
+          <p id="status" class="subtitle">Protecting this tab</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="count" aria-live="polite">
+      <span id="blocked-count" class="count-number">0</span>
+      <span class="count-label">popups blocked on this tab</span>
+    </section>
+
+    <section class="controls">
+      <div class="row">
+        <label class="row-label" for="global">
+          <span class="row-title">Blocker enabled</span>
+          <span class="row-desc">Turn protection on or off everywhere</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="global">
+          <span class="track" aria-hidden="true"></span>
+        </span>
+      </div>
+
+      <div class="divider" role="separator"></div>
+
+      <div class="row" id="page-row">
+        <label class="row-label" for="page">
+          <span class="row-title">Block on this site</span>
+          <span class="row-desc" id="site-host">current site</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="page">
+          <span class="track" aria-hidden="true"></span>
+        </span>
+      </div>
+
+      <div class="row sub" id="subs-row">
+        <label class="row-label" for="subs">
+          <span class="row-title">Include sub-frames</span>
+        </label>
+        <span class="switch small">
+          <input type="checkbox" id="subs">
+          <span class="track" aria-hidden="true"></span>
+        </span>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button type="button" class="btn" id="allow-last-request">Allow last</button>
+      <button type="button" class="btn danger" id="deny-last-request">Block last</button>
+    </section>
+
+    <footer class="foot">
+      <button type="button" class="link" id="options">Options</button>
+      <a class="credit" href="https://github.com/carmelobattiato/Block-PopUP" target="_blank" rel="noopener noreferrer">by Carmelo Battiato</a>
+    </footer>
+  </main>
+</body>
+</html>

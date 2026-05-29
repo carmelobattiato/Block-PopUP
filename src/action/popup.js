@@ -28,6 +28,59 @@ const match = (hostname, href) => {
   }
 };
 
+const timeAgo = ts => {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 5) {
+    return 'just now';
+  }
+  if (s < 60) {
+    return s + 's ago';
+  }
+  const m = Math.round(s / 60);
+  if (m < 60) {
+    return m + 'm ago';
+  }
+  return Math.round(m / 60) + 'h ago';
+};
+
+const renderHistory = list => {
+  const ul = $('recent-list');
+  const countEl = $('recent-count');
+  const clear = $('clear-history');
+  ul.textContent = '';
+
+  if (!list.length) {
+    countEl.textContent = '';
+    clear.hidden = true;
+    const li = document.createElement('li');
+    li.className = 'recent-empty';
+    li.textContent = 'No popups blocked yet';
+    ul.appendChild(li);
+    return;
+  }
+
+  countEl.textContent = '(' + list.length + ')';
+  clear.hidden = false;
+
+  // newest first
+  for (const entry of [...list].reverse()) {
+    const li = document.createElement('li');
+    li.className = 'recent-item';
+    li.title = entry.href || '';
+
+    const host = document.createElement('span');
+    host.className = 'recent-host';
+    host.textContent = entry.hostname || entry.href || '(unknown)';
+
+    const when = document.createElement('span');
+    when.className = 'recent-when';
+    when.textContent = timeAgo(entry.ts);
+
+    li.append(host, when);
+    ul.appendChild(li);
+  }
+};
+
 const setSiteDisabled = disabled => {
   $('page').disabled = disabled;
   $('subs').disabled = disabled;
@@ -84,6 +137,19 @@ chrome.tabs.query({
   $('deny-last-request').onclick = () => chrome.tabs.sendMessage(tab.id, {
     cmd: 'deny-last-request'
   }, () => window.close());
+
+  // Recent blocked list (per tab, from the service worker)
+  chrome.runtime.sendMessage({cmd: 'get-history', tabId: tab.id}, list => {
+    void chrome.runtime.lastError;
+    renderHistory(list || []);
+  });
+  $('clear-history').onclick = () => chrome.runtime.sendMessage({
+    cmd: 'clear-history',
+    tabId: tab.id
+  }, () => {
+    void chrome.runtime.lastError;
+    renderHistory([]);
+  });
 
   // Per-site state
   chrome.scripting.executeScript({

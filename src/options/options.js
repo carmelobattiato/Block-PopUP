@@ -8,7 +8,8 @@ const BOOL_KEYS = [
   'badge',
   'block-page-redirection',
   'block-automated-redirection',
-  'block-page-redirection-same-origin'
+  'block-page-redirection-same-origin',
+  'sync-enabled'
 ];
 
 const SELECT_KEYS = ['placement', 'default-action'];
@@ -77,6 +78,7 @@ const restore = async () => {
 
 /* ---- collect form values and persist ---- */
 const save = async () => {
+  const wasSync = (await config.get(['sync-enabled']))['sync-enabled'];
   const prefs = {};
 
   for (const key of BOOL_KEYS) {
@@ -109,6 +111,13 @@ const save = async () => {
   }
 
   await config.set(prefs);
+
+  // just switched sync on -> seed the whole current config to sync storage
+  if (prefs['sync-enabled'] && !wasSync) {
+    const ok = await config.pushAllToSync();
+    showStatus(ok ? 'Saved — syncing enabled' : 'Saved — but sync quota exceeded');
+    return;
+  }
   showStatus('Saved');
 };
 
@@ -165,8 +174,72 @@ const resetDefaults = async () => {
   showStatus('Reset to defaults');
 };
 
+/* ---- per-list search/filter (keeps the textarea as source of truth) ---- */
+const SEARCH_KEYS = ['popup-hosts', 'top-hosts', 'block-hosts'];
+const MAX_MATCHES = 60;
+
+const selectInTextarea = (textarea, host) => {
+  const i = textarea.value.indexOf(host);
+  textarea.focus();
+  if (i >= 0) {
+    // setSelectionRange scrolls the selection into view on focus
+    textarea.setSelectionRange(i, i + host.length);
+  }
+};
+
+const wireSearch = key => {
+  const input = $(key + '-search');
+  const panel = $(key + '-matches');
+  const textarea = $(key);
+  if (!input || !panel || !textarea) {
+    return;
+  }
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    panel.textContent = '';
+    if (!q) {
+      panel.hidden = true;
+      return;
+    }
+    const entries = parseHosts(textarea.value);
+    const matches = entries.filter(h => h.toLowerCase().includes(q));
+
+    const count = document.createElement('span');
+    count.className = 'list-count';
+    count.textContent = matches.length + ' of ' + entries.length;
+    panel.appendChild(count);
+
+    for (const host of matches.slice(0, MAX_MATCHES)) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'list-match';
+      chip.textContent = host;
+      chip.title = 'Select "' + host + '" in the list';
+      chip.addEventListener('click', () => selectInTextarea(textarea, host));
+      panel.appendChild(chip);
+    }
+    if (matches.length > MAX_MATCHES) {
+      const more = document.createElement('span');
+      more.className = 'list-count';
+      more.textContent = '+' + (matches.length - MAX_MATCHES) + ' more';
+      panel.appendChild(more);
+    }
+    panel.hidden = false;
+  });
+  // a filtered list can go stale after editing the textarea
+  textarea.addEventListener('input', () => {
+    if (input.value) {
+      input.dispatchEvent(new Event('input'));
+    }
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   restore();
+
+  for (const key of SEARCH_KEYS) {
+    wireSearch(key);
+  }
 
   $('save').addEventListener('click', save);
   $('export').addEventListener('click', exportSettings);

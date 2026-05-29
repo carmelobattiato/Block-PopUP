@@ -18,10 +18,29 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  /* turn a glob entry (containing "*") into an anchored RegExp; cached */
+  const globCache = new Map();
+  function globToRe(pattern) {
+    let re = globCache.get(pattern);
+    if (!re) {
+      const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+      re = new RegExp('^' + escaped + '$', 'i');
+      globCache.set(pattern, re);
+    }
+    return re;
+  }
+
   /* a host matches an entry when it is the entry, a sub-domain of it, or a
-     parent of it (so "example.com" covers "ads.example.com" and vice-versa) */
+     parent of it (so "example.com" covers "ads.example.com" and vice-versa).
+     Entries containing "*" are treated as glob patterns (e.g. "tracker-*.net",
+     "*ads*"). */
   function matchesHost(host, list) {
-    return list.some(h => host === h || host.endsWith('.' + h) || h.endsWith('.' + host));
+    return list.some(h => {
+      if (h.includes('*')) {
+        return globToRe(h).test(host);
+      }
+      return host === h || host.endsWith('.' + h) || h.endsWith('.' + host);
+    });
   }
 
   /* Decide whether a new-context request should be blocked.

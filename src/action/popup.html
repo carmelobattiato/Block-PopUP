@@ -25,6 +25,15 @@
       <span class="count-label">popups blocked on this tab</span>
     </section>
 
+    <details class="recent" id="recent">
+      <summary class="recent-summary">
+        <span>Recent blocked</span>
+        <span class="recent-count" id="recent-count"></span>
+      </summary>
+      <ul class="recent-list" id="recent-list"></ul>
+      <button type="button" class="recent-clear" id="clear-history" hidden>Clear list</button>
+    </details>
+
     <section class="controls">
       <div class="row">
         <label class="row-label" for="global">
@@ -68,7 +77,7 @@
 
     <footer class="foot">
       <button type="button" class="link" id="options">Options</button>
-      <a class="credit" href="https://github.com/carmelobattiato/Block-PopUP" target="_blank" rel="noopener noreferrer">by Carmelo Battiato</a>
+      <a class="credit" href="https://github.com/carmelobattiato/Block-PopUP" target="_blank" rel="noopener noreferrer" aria-label="Block PopUP project on GitHub, by Carmelo Battiato">by Carmelo Battiato</a>
     </footer>
   </main>
 </body>

@@ -6,6 +6,16 @@ All notable changes to **Block PopUP** are documented in this file.
 
 ---
 
+## [0.2] — 2026-05-29
+
+- Accessibility: the notification card now exposes ARIA roles, a screen-reader live region announcing blocked popups, a proper menu role with `aria-expanded`, visible focus rings, and an in-card focus trap when auto-focus is enabled
+- Recent blocked: the toolbar panel now lists the popups blocked on the current tab (source and time), with a Clear action; the list is per-page and resets on navigation
+- Undo: choosing "Block this site" now shows a 5-second Undo toast so an accidental block can be reverted before it persists
+- Options: each domain list now has a filter box that shows matching entries with a count and jumps to them in the list — handy for long lists
+- Optional sync: a new "Sync settings across devices" switch mirrors all preferences through `chrome.storage.sync`, with graceful handling if the sync quota is exceeded
+- Domain matching now supports wildcard patterns (e.g. `*.example.com`, `tracker-*.net`, `*ads*`) in the allow and always-block lists
+
+
 ## [0.1] — 2026-05-29
 
 - First release of Block PopUP — a strict, modern popup blocker for Chrome & Edge (Manifest V3).

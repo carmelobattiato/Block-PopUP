@@ -39,6 +39,22 @@ test('matchesHost — exact, sub-domain and parent', () => {
   assert.equal(matchesHost('notexample.com', ['example.com']), false);
 });
 
+test('matchesHost — wildcard glob patterns', () => {
+  // *.example.com matches sub-domains
+  assert.equal(matchesHost('ads.example.com', ['*.example.com']), true);
+  assert.equal(matchesHost('a.b.example.com', ['*.example.com']), true);
+  // prefix/suffix globs
+  assert.equal(matchesHost('tracker-1.net', ['tracker-*.net']), true);
+  assert.equal(matchesHost('tracker.org', ['tracker-*.net']), false);
+  // substring glob
+  assert.equal(matchesHost('cdn.ads.evil.com', ['*ads*']), true);
+  assert.equal(matchesHost('safe.example.com', ['*ads*']), false);
+  // anchored: must match the whole host
+  assert.equal(matchesHost('example.com.evil.net', ['*.example.com']), false);
+  // a literal (no "*") still uses exact/sub/parent matching
+  assert.equal(matchesHost('ads.example.com', ['example.com']), true);
+});
+
 test('blocks a plain window.open to a foreign host', () => {
   const v = verdict(req(), settings(), env());
   assert.equal(v.block, true);

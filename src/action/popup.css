@@ -116,6 +116,116 @@ body {
   color: var(--muted);
 }
 
+/* ---------- Recent blocked ---------- */
+.recent {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.recent-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.recent-summary::-webkit-details-marker {
+  display: none;
+}
+
+.recent-summary::after {
+  content: "▸";
+  color: var(--muted);
+  font-size: 10px;
+  transition: transform .15s ease;
+}
+
+.recent[open] .recent-summary::after {
+  transform: rotate(90deg);
+}
+
+.recent-count {
+  margin-left: auto;
+  margin-right: 4px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.recent-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px 4px;
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+.recent-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--line);
+}
+
+.recent-host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.recent-when {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.recent-empty {
+  padding: 6px 8px 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+.recent-clear {
+  display: block;
+  width: calc(100% - 8px);
+  margin: 4px;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--btn-bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11.5px;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.recent-clear:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text);
+}
+
+.recent-clear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ---------- Controls ---------- */
 .controls {
   border: 1px solid var(--line);

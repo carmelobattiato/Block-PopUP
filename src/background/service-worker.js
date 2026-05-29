@@ -1,8 +1,10 @@
-/* global config */
+/* global config, PPolicy */
 
 if (typeof importScripts !== 'undefined') {
   self.importScripts('config.js');
   self.importScripts('badge.js');
+  self.importScripts('history.js');
+  self.importScripts('../content/policy.js'); // shared host matcher (PPolicy)
 }
 
 /* enable or disable the blocker */
@@ -117,11 +119,30 @@ config.changed(ps => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  // only accept messages from this extension's own content scripts
-  if (sender.id !== chrome.runtime.id || !sender.tab) {
+  // only accept messages from this extension (own content scripts or pages)
+  if (sender.id !== chrome.runtime.id) {
+    return;
+  }
+  // history/clear come from the toolbar panel (an extension page, no sender.tab)
+  if (request.cmd === 'get-history') {
+    blockHistory.get(request.tabId).then(list => response(list));
+    return true;
+  }
+  if (request.cmd === 'clear-history') {
+    blockHistory.clear(request.tabId).then(() => response(true));
+    return true;
+  }
+  // everything below originates from a content script and needs a tab
+  if (!sender.tab) {
     return;
   }
   if (request.cmd === 'popup-request') {
+    blockHistory.add(sender.tab.id, {
+      hostname: request.hostname,
+      href: request.href,
+      type: request.type,
+      ts: Date.now()
+    });
     config.get(['silent', 'block-hosts', 'issue', 'placement', 'width']).then(prefs => {
       if (prefs.issue === false) {
         return;
@@ -129,7 +150,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       // permanently blocked popup source: skip the notification UI.
       // badge.js still increments the counter on this same message.
       const src = request.hostname;
-      if (src && (prefs['block-hosts'] || []).some(h => src === h || src.endsWith('.' + h))) {
+      if (src && PPolicy.matchesHost(src, prefs['block-hosts'] || [])) {
         return;
       }
       const {hostname} = new URL(sender.tab.url);
@@ -271,7 +292,24 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       });
     }
   }
+  // undo a just-added block (the notification's Undo toast)
+  else if (request.cmd === 'unblock-host') {
+    if (request.hostname) {
+      config.get(['block-hosts']).then(prefs => {
+        const list = (prefs['block-hosts'] || []).filter(h => h !== request.hostname);
+        config.set({'block-hosts': list});
+      });
+    }
+  }
 });
+
+/* keep the per-tab blocked history scoped to the current page */
+chrome.tabs.onUpdated.addListener((tabId, info) => {
+  if (info.url) {
+    blockHistory.clear(tabId); // top-frame navigation -> fresh page history
+  }
+});
+chrome.tabs.onRemoved.addListener(tabId => blockHistory.clear(tabId));
 
 /* commands */
 chrome.commands.onCommand.addListener(cmd => chrome.tabs.query({

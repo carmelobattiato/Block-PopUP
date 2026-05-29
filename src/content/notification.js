@@ -43,6 +43,14 @@
   let host = null;
   let root = null;
   let stack = null;
+  let live = null; // visually-hidden aria-live region for screen readers
+  let idSeq = 0;   // unique ids for menu/aria-controls wiring
+
+  const announce = msg => {
+    if (live) {
+      live.textContent = msg;
+    }
+  };
 
   const CSS = `
 :host, * { box-sizing: border-box; }
@@ -111,6 +119,8 @@
 .btn.danger { background: var(--danger); border-color: transparent; color: #fff; }
 .btn.primary:hover, .btn.danger:hover { filter: brightness(1.06); }
 .spacer { flex: 1; }
+.toast { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.toast-text { flex: 1 1 auto; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .more { position: relative; }
 .more-btn { width: 28px; padding: 0; font-size: 14px; line-height: 1; }
 .menu {
@@ -132,6 +142,11 @@
 }
 .menu button:hover { background: var(--btn); }
 .menu button[disabled] { opacity: .4; cursor: not-allowed; }
+.btn:focus-visible, .menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 @keyframes pp-in { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
 `;
 
@@ -163,7 +178,10 @@
     stack.className = 'stack ' +
       (vert === 'top' ? 'v-top' : 'v-bottom') + ' ' +
       (horiz === 'left' ? 'h-left' : 'h-right');
-    root.append(style, stack);
+    live = el('div', {className: 'sr-only'});
+    live.setAttribute('role', 'status');
+    live.setAttribute('aria-live', 'polite');
+    root.append(style, live, stack);
     root.addEventListener('keydown', onKeydown);
     (document.documentElement || document.body).appendChild(host);
   }
@@ -174,11 +192,19 @@
       host = null;
       root = null;
       stack = null;
+      live = null;
     }
   }
 
   /* ---- entries ---- */
   const entries = new Map(); // key -> card
+  const toasts = new Set();  // transient undo toasts (outlive their card)
+
+  function maybeUnmount() {
+    if (entries.size === 0 && toasts.size === 0) {
+      unmount();
+    }
+  }
 
   const lastCard = () => {
     let last = null;
@@ -200,9 +226,14 @@
     const card = {req, key, count: 1, timer: null, ticking: false, hover: false};
     const usableUrl = isHTTP(req.href);
 
+    const menuId = 'pp-menu-' + (++idSeq);
+
     const count = el('span', {className: 'count', textContent: '1', hidden: true});
+    count.setAttribute('aria-hidden', 'true');
+    const dot = el('span', {className: 'dot'});
+    dot.setAttribute('aria-hidden', 'true');
     const head = el('div', {className: 'head'},
-      el('span', {className: 'dot'}),
+      dot,
       el('span', {className: 'title', textContent: 'Popup blocked'}),
       count);
 
@@ -212,20 +243,33 @@
     const block = el('button', {className: 'btn danger', textContent: 'Block', title: 'Always block this site', disabled: !req.hostname});
     const close = el('button', {className: 'btn', textContent: 'Close', title: 'Dismiss (stays blocked)'});
     const moreBtn = el('button', {className: 'btn more-btn', textContent: '⋯', title: 'More actions'});
+    moreBtn.setAttribute('aria-label', 'More actions');
+    moreBtn.setAttribute('aria-haspopup', 'true');
+    moreBtn.setAttribute('aria-expanded', 'false');
+    moreBtn.setAttribute('aria-controls', menuId);
 
-    const mkItem = (label, disabled) => el('button', {textContent: label, disabled: !!disabled});
+    const mkItem = (label, disabled) => {
+      const b = el('button', {textContent: label, disabled: !!disabled});
+      b.setAttribute('role', 'menuitem');
+      return b;
+    };
     const openTab = mkItem('Open in background tab', !usableUrl);
     const openHere = mkItem('Open in this tab', !usableUrl);
     const allowSite = mkItem('Always allow this site', !usableUrl);
-    const menu = el('div', {className: 'menu'}, openTab, openHere, allowSite);
+    const menu = el('div', {className: 'menu', id: menuId}, openTab, openHere, allowSite);
+    menu.setAttribute('role', 'menu');
 
     const more = el('div', {className: 'more'}, moreBtn, menu);
     const actions = el('div', {className: 'actions'}, allow, block, close, el('span', {className: 'spacer'}), more);
 
     const node = el('div', {className: 'card', tabIndex: -1}, head, url, actions);
+    node.setAttribute('role', 'group');
+    node.setAttribute('aria-label', req.hostname ? 'Blocked popup from ' + req.hostname : 'Blocked popup');
     card.el = node;
     card.badge = count;
     card.btns = {allow, block, close, more: moreBtn};
+
+    const setExpanded = () => moreBtn.setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false');
 
     /* interactions */
     const stopTick = () => stopTimer(card);
@@ -238,10 +282,16 @@
     moreBtn.onclick = e => {
       e.stopPropagation();
       menu.classList.toggle('open');
+      setExpanded();
     };
     node.addEventListener('mouseenter', () => { card.hover = true; });
     node.addEventListener('mouseleave', () => { card.hover = false; });
-    node.addEventListener('click', () => menu.classList.remove('open'));
+    node.addEventListener('click', () => {
+      if (menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        setExpanded();
+      }
+    });
 
     return card;
   }
@@ -350,29 +400,69 @@
       existing.badge.hidden = existing.count < 2;
       stopTimer(existing);
       startTimer(existing);
+      announce((req.hostname || 'A site') + ' blocked ' + existing.count + ' popups');
       return;
     }
     const card = buildCard(req, key);
     entries.set(key, card);
     stack.appendChild(card.el);
     enforceLimit();
+    announce(req.hostname ? 'Popup blocked from ' + req.hostname : 'Popup blocked');
     if (prefs['focus-popup']) {
       card.el.focus();
     }
     startTimer(card);
   }
 
-  function remove(card) {
+  function detachCard(card) {
     stopTimer(card);
     card.el.remove();
     entries.delete(card.key);
-    if (entries.size === 0) {
-      unmount();
-    }
+  }
+
+  function remove(card) {
+    detachCard(card);
+    maybeUnmount();
   }
 
   function dismiss(card) {
     remove(card); // popup stays blocked; just close the card
+  }
+
+  /* after "Block this site": replace the card with a short undo toast */
+  function blockedToast(card, hostname) {
+    detachCard(card);
+    const text = el('span', {className: 'toast-text', textContent: 'Blocked ' + (hostname || 'this site')});
+    const undo = el('button', {className: 'btn', textContent: 'Undo'});
+    const node = el('div', {className: 'card toast'}, text, el('span', {className: 'spacer'}), undo);
+    node.setAttribute('role', 'status');
+    const toast = {el: node, timer: null};
+    toasts.add(toast);
+    stack.appendChild(node);
+    announce('Blocked ' + (hostname || 'this site') + ', undo available');
+
+    const removeToast = () => {
+      clearInterval(toast.timer);
+      node.remove();
+      toasts.delete(toast);
+      maybeUnmount();
+    };
+    undo.onclick = () => {
+      send({cmd: 'unblock-host', hostname});
+      removeToast();
+    };
+
+    let left = 5;
+    undo.textContent = 'Undo (' + left + ')';
+    toast.timer = setInterval(() => {
+      left -= 1;
+      if (left > 0) {
+        undo.textContent = 'Undo (' + left + ')';
+      }
+      else {
+        removeToast();
+      }
+    }, 1000);
   }
 
   function perform(card, action, trusted = true) {
@@ -391,6 +481,8 @@
     }
     else if (action === 'block-site') {
       send({cmd:'block-host', hostname});
+      blockedToast(card, hostname); // detaches the card and shows an undo toast
+      return;
     }
     remove(card);
   }
@@ -415,6 +507,24 @@
       let i = cards.findIndex(c => c.el === focused);
       i = e.key === 'ArrowDown' ? Math.min(cards.length - 1, i + 1) : Math.max(0, i - 1);
       cards[i].el.focus();
+    }
+    // keep Tab inside the focused card while it is auto-focused
+    else if (e.key === 'Tab' && prefs['focus-popup']) {
+      const focused = root.activeElement;
+      const card = focused?.closest?.('.card');
+      if (!card) {
+        return;
+      }
+      const f = [...card.querySelectorAll('button')].filter(b => !b.disabled && b.offsetParent !== null);
+      if (!f.length) {
+        return;
+      }
+      e.preventDefault();
+      const i = f.indexOf(focused);
+      const n = e.shiftKey
+        ? (i <= 0 ? f.length - 1 : i - 1)
+        : (i >= f.length - 1 ? 0 : i + 1);
+      f[n].focus();
     }
   }
 

@@ -24,7 +24,7 @@
         </label>
         <span class="switch">
           <input type="checkbox" id="enabled">
-          <span class="track"></span>
+          <span class="track" aria-hidden="true"></span>
         </span>
       </div>
 
@@ -34,7 +34,7 @@
         </label>
         <span class="switch">
           <input type="checkbox" id="issue">
-          <span class="track"></span>
+          <span class="track" aria-hidden="true"></span>
         </span>
       </div>
 
@@ -44,7 +44,7 @@
         </label>
         <span class="switch">
           <input type="checkbox" id="badge">
-          <span class="track"></span>
+          <span class="track" aria-hidden="true"></span>
         </span>
       </div>
 
@@ -107,23 +107,29 @@
     <!-- Domain lists -->
     <section class="card">
       <h2 class="card-title">Domain lists</h2>
-      <p class="card-hint">One hostname per line, or comma separated.</p>
+      <p class="card-hint">One hostname per line, or comma separated. Wildcards like <code>*.example.com</code> are supported.</p>
 
       <div class="field">
         <label for="popup-hosts" class="field-label">Allowed popup sources</label>
         <span class="field-hint">These domains may open popups everywhere.</span>
+        <input type="search" id="popup-hosts-search" class="list-search" placeholder="Filter…" aria-label="Filter allowed popup sources">
+        <div id="popup-hosts-matches" class="list-matches" role="group" aria-label="Filter results" hidden></div>
         <textarea id="popup-hosts" class="textarea" rows="4" spellcheck="false"></textarea>
       </div>
 
       <div class="field">
         <label for="top-hosts" class="field-label">Disabled on these sites</label>
         <span class="field-hint">The blocker is turned off on these sites.</span>
+        <input type="search" id="top-hosts-search" class="list-search" placeholder="Filter…" aria-label="Filter disabled sites">
+        <div id="top-hosts-matches" class="list-matches" role="group" aria-label="Filter results" hidden></div>
         <textarea id="top-hosts" class="textarea" rows="4" spellcheck="false"></textarea>
       </div>
 
       <div class="field">
         <label for="block-hosts" class="field-label">Always-blocked domains</label>
         <span class="field-hint">Blocked silently — counter only, no notification.</span>
+        <input type="search" id="block-hosts-search" class="list-search" placeholder="Filter…" aria-label="Filter always-blocked domains">
+        <div id="block-hosts-matches" class="list-matches" role="group" aria-label="Filter results" hidden></div>
         <textarea id="block-hosts" class="textarea" rows="4" spellcheck="false"></textarea>
       </div>
     </section>
@@ -138,7 +144,7 @@
         </label>
         <span class="switch">
           <input type="checkbox" id="block-page-redirection">
-          <span class="track"></span>
+          <span class="track" aria-hidden="true"></span>
         </span>
       </div>
 
@@ -148,7 +154,7 @@
         </label>
         <span class="switch">
           <input type="checkbox" id="block-automated-redirection">
-          <span class="track"></span>
+          <span class="track" aria-hidden="true"></span>
         </span>
       </div>
 
@@ -159,7 +165,7 @@
         </label>
         <span class="switch">
           <input type="checkbox" id="block-page-redirection-same-origin">
-          <span class="track"></span>
+          <span class="track" aria-hidden="true"></span>
         </span>
       </div>
 
@@ -173,6 +179,18 @@
     <section class="card">
       <h2 class="card-title">Backup</h2>
       <p class="card-hint">Export or import all settings, or reset everything to defaults.</p>
+
+      <div class="row row-switch">
+        <label for="sync-enabled" class="row-label">
+          <span class="label-main">Sync settings across devices</span>
+          <span class="label-hint">Mirror settings through your browser account. Very large domain lists may exceed the sync quota.</span>
+        </label>
+        <span class="switch">
+          <input type="checkbox" id="sync-enabled">
+          <span class="track" aria-hidden="true"></span>
+        </span>
+      </div>
+
       <div class="btn-row">
         <button type="button" id="export" class="btn">Export</button>
         <button type="button" id="import" class="btn">Import</button>

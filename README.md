@@ -40,10 +40,14 @@ in‑page card that never disrupts the site you're reading.
 | 🔘 | One‑tap actions: **Allow**, **Block**, **Close**, plus **⋯ More** → *Open in tab · Open here · Always allow* |
 | 🚫 | **Always‑block list** — silence a domain forever: no card, only the counter keeps counting |
 | ⏱️ | **Auto‑resolve** with a visible countdown on the chosen default action (Close / Block / …) |
-| 🧭 | **Toolbar panel**: global on/off, per‑site on/off (+ sub‑frames), blocked count, *Allow / Block last* |
+| 🧭 | **Toolbar panel**: global on/off, per‑site on/off (+ sub‑frames), blocked count, *Allow / Block last*, recent blocked list |
 | 🔀 | **Redirect protection** — optionally block sneaky page redirects (incl. automated ones) |
 | 🔒 | **Private by design** — no analytics, no remote requests, all settings in local storage |
 | 💾 | **Import / Export** your configuration as JSON |
+| 📢 | **Block ads by domain** — right‑click any ad → *Block ads from this domain* to block that ad domain only on the current site (network‑level, via `declarativeNetRequest` scoped by initiator) |
+| 🌀 | **Wildcard patterns** in domain lists — e.g. `*.example.com`, `tracker-*.net`, `*ads*` |
+| ↩️ | **Undo** — *Block this site* shows a 5‑second toast to revert an accidental block |
+| 🔁 | **Sync across devices** — optional switch mirrors all settings via `chrome.storage.sync` |
 
 ---
 
@@ -110,8 +114,9 @@ flowchart TD
 Open the panel (🛡️ icon) → **Options**, organised in cards:
 
 - **General** — enable, show notifications, badge + colour, position (tl/tr/bl/br), **default action** (Do nothing / Close / Block / Open in tab / Open here), auto‑resolve seconds, max notifications, width.
-- **Domain lists** — *allowed popup sources*, *disabled sites*, *always‑blocked domains*.
+- **Domain lists** — *allowed popup sources*, *disabled sites*, *always‑blocked domains*, **blocked ad domains**. Each list has a filter box for quick lookup in long lists.
 - **Redirect protection** — block page redirects and automated redirects.
+- **Sync** — mirror all settings across devices via `chrome.storage.sync` (optional; gracefully handles quota limits).
 - **Backup** — Import / Export / Reset to defaults.
 
 ---
@@ -124,7 +129,9 @@ src/
 ├─ background/
 │  ├─ service-worker.js         # registers content scripts, routes messages & actions
 │  ├─ config.js                 # default preferences (chrome.storage.local)
-│  └─ badge.js                  # toolbar icon state + per-tab blocked counter
+│  ├─ badge.js                  # toolbar icon state + per-tab blocked counter
+│  ├─ adblock.js                # context-menu ad blocker, declarativeNetRequest rules (per-site)
+│  └─ history.js                # per-tab blocked-popup history
 ├─ content/
 │  ├─ page-hook.js              # MAIN world — hooks the popup APIs
 │  ├─ blocker.js                # ISOLATED world — redirect guard, record/replay, messaging
@@ -166,6 +173,8 @@ test/
 |---|---|
 | `storage` | save your preferences locally |
 | `scripting` | register the in‑page blocking scripts |
+| `contextMenus` | right‑click *Block ads from this domain* menu item |
+| `declarativeNetRequest` | network‑level ad blocking rules scoped per site |
 | `<all_urls>` | a popup can come from any site |
 
 No data ever leaves your browser.

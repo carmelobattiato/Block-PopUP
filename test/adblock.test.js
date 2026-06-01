@@ -38,6 +38,9 @@ test('buildRules — empty inputs produce no rules', () => {
 test('buildRules — per-site rule has initiatorDomains', () => {
   const rules = buildRules({'corriere.it': ['doubleclick.net']}, []);
   assert.equal(rules.length, 1);
+  assert.equal(rules[0].id, 1);
+  assert.equal(rules[0].priority, 1);
+  assert.equal(rules[0].action.type, 'block');
   assert.deepEqual(rules[0].condition.initiatorDomains, ['corriere.it']);
   assert.deepEqual(rules[0].condition.requestDomains, ['doubleclick.net']);
 });
@@ -54,4 +57,18 @@ test('buildRules — site + global produce 2 rules with sequential IDs', () => {
   assert.equal(rules.length, 2);
   assert.equal(rules[0].id, 1);
   assert.equal(rules[1].id, 2);
+  // per-site rule first, global rule second
+  assert.ok(Array.isArray(rules[0].condition.initiatorDomains), 'first rule should be per-site');
+  assert.ok(!rules[1].condition.initiatorDomains, 'second rule should be global');
+});
+
+test('buildRules — filters falsy domain entries', () => {
+  const rules = buildRules({'a.com': ['', null, 'real.net', undefined]}, []);
+  assert.equal(rules.length, 1);
+  assert.deepEqual(rules[0].condition.requestDomains, ['real.net']);
+});
+
+test('buildRules — tolerates legacy array value for map (asMap guard)', () => {
+  const rules = buildRules([], []);
+  assert.deepEqual(rules, []);
 });

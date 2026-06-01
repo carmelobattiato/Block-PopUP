@@ -80,7 +80,13 @@ const adblock = (() => {
   /* rebuild every dynamic rule from the stored per-site map and global list;
      skips the DNR write entirely when the rule set is already up to date. */
   async function syncRules() {
-    const data = await config.get(['ad-hosts', 'ad-hosts-global']);
+    let data;
+    try {
+      data = await config.get(['ad-hosts', 'ad-hosts-global']);
+    } catch (e) {
+      console.warn('[Block PopUP] config.get failed in syncRules:', e.message);
+      return;
+    }
     const newRules = buildRules(data['ad-hosts'], data['ad-hosts-global']);
     let existing = [];
     try {
@@ -90,8 +96,13 @@ const adblock = (() => {
       return;
     }
 
-    // skip the DNR write if content is identical
-    if (JSON.stringify(existing) === JSON.stringify(newRules)) {
+    const ruleSig = r => {
+      const initStr = (r.condition.initiatorDomains || []).slice().sort().join(',');
+      const reqStr = (r.condition.requestDomains || []).slice().sort().join(',');
+      return r.id + ':' + r.priority + ':' + r.action.type + '|' + initStr + '|' + reqStr;
+    };
+    const sig = rules => rules.map(ruleSig).sort().join(';');
+    if (sig(existing) === sig(newRules)) {
       return;
     }
 

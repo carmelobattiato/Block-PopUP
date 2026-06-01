@@ -145,6 +145,16 @@
         <span class=”field-hint”>These ad domains are blocked on every website.</span>
         <ul id=”ad-global-list” class=”ad-domains”></ul>
       </div>
+      <div class=”field” style=”margin-top:1.4rem”>
+        <label class=”field-label”>Import filter list</label>
+        <span class=”field-hint”>URL to an EasyList / uBlock filter list (<code>||domain^</code> format). Domains are added to “Blocked everywhere”.</span>
+        <div class=”filter-list-row”>
+          <input type=”url” id=”filter-list-url” class=”text-input” placeholder=”https://example.com/easylist.txt”>
+          <button type=”button” id=”filter-list-fetch” class=”btn”>Fetch &amp; Import</button>
+        </div>
+        <p id=”filter-list-status” class=”filter-list-status” aria-live=”polite”></p>
+        <div id=”filter-list-saved”></div>
+      </div>
     </section>
 
     <!-- Redirect protection -->

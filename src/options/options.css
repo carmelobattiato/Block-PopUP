@@ -488,3 +488,11 @@ body {
 .stats-row { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; }
 .stats-label { color: var(--hint, #888); }
 .stats-value { font-weight: 600; }
+
+.filter-list-row { display: flex; gap: .5rem; margin-top: .4rem; }
+.text-input { flex: 1; padding: .35rem .6rem; border: 1px solid var(--border, #ccc); border-radius: 4px; font-size: .9rem; }
+.filter-list-status { font-size: .8rem; min-height: 1.2em; margin: .3rem 0 0; }
+.filter-list-status.ok { color: #27ae60; }
+.filter-list-status.err { color: #c0392b; }
+#filter-list-saved { font-size: .8rem; }
+#filter-list-saved a { display: block; margin-top: .2rem; word-break: break-all; color: var(--link, #2980b9); }

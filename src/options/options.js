@@ -171,10 +171,12 @@ const resetDefaults = async () => {
   }
   prefs['ad-hosts'] = {}; // structured map, not part of ALL_KEYS
   prefs['ad-hosts-global'] = [];
+  prefs['filter-list-urls'] = [];
   await config.set(prefs);
   await restore();
   renderAdGroups();
   renderGlobalAdDomains();
+  renderSavedUrls();
   showStatus('Reset to defaults');
 };
 
@@ -383,6 +385,71 @@ const renderStats = async () => {
   }
 };
 
+const parseFilterList = text => {
+  const domains = new Set();
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('!') || line.startsWith('[')) continue;
+    const m = line.match(/^\|\|([a-z0-9._-]+)\^/i);
+    if (m && m[1]) domains.add(m[1].toLowerCase());
+  }
+  return [...domains];
+};
+
+const renderSavedUrls = async () => {
+  const el = $('filter-list-saved');
+  if (!el) return;
+  el.textContent = '';
+  const {'filter-list-urls': urls} = await config.get(['filter-list-urls']);
+  if (!Array.isArray(urls) || !urls.length) return;
+  for (const url of urls) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = url;
+    el.appendChild(a);
+  }
+};
+
+const fetchFilterList = async () => {
+  const urlInput = $('filter-list-url');
+  const status = $('filter-list-status');
+  if (!urlInput || !status) return;
+  const url = urlInput.value.trim();
+  status.className = 'filter-list-status';
+  if (!url.startsWith('http')) {
+    status.textContent = 'Enter a valid http/https URL.';
+    status.classList.add('err');
+    return;
+  }
+  status.textContent = 'Fetching…';
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const parsed = parseFilterList(text);
+    if (!parsed.length) {
+      status.textContent = 'No parseable domains found.';
+      status.classList.add('err');
+      return;
+    }
+    const {'ad-hosts-global': existing, 'filter-list-urls': savedUrls} = await config.get(['ad-hosts-global', 'filter-list-urls']);
+    const merged = [...new Set([...(Array.isArray(existing) ? existing : []), ...parsed])];
+    const urls = [...new Set([...(Array.isArray(savedUrls) ? savedUrls : []), url])];
+    await config.set({'ad-hosts-global': merged, 'filter-list-urls': urls});
+    renderGlobalAdDomains();
+    renderDnrCounter();
+    renderSavedUrls();
+    urlInput.value = '';
+    status.textContent = '+' + parsed.length + ' domains imported (' + merged.length + ' total).';
+    status.classList.add('ok');
+  } catch (e) {
+    status.textContent = 'Fetch failed: ' + e.message;
+    status.classList.add('err');
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   restore();
   renderAdGroups();
@@ -393,6 +460,9 @@ document.addEventListener('DOMContentLoaded', () => {
   for (const key of SEARCH_KEYS) {
     wireSearch(key);
   }
+
+  $('filter-list-fetch').addEventListener('click', fetchFilterList);
+  renderSavedUrls();
 
   $('save').addEventListener('click', save);
   $('export').addEventListener('click', exportSettings);

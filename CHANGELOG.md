@@ -6,6 +6,11 @@ All notable changes to **Block PopUP** are documented in this file.
 
 ---
 
+## [0.5] — 2026-06-02
+
+- Block ads by domain, per site: right-click an ad and choose “Block ads from this domain” to block that ad domain (e.g. `doubleclick.net`) only on the site you are visiting (declarativeNetRequest scoped by initiator). The same ad domain still loads on other sites. Review and remove blocked domains for the current page from the toolbar panel, or for all sites under Options → Blocked ad domains.
+
+
 ## [0.3] — 2026-06-01
 
 - Test suite expanded to 62 tests: functional coverage of the optional-sync config layer and the per-tab blocked history, plus non-functional checks (purity, determinism, robustness, and performance on large lists)

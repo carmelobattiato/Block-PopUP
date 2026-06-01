@@ -169,8 +169,10 @@ const resetDefaults = async () => {
   for (const key of ALL_KEYS) {
     prefs[key] = config[key];
   }
+  prefs['ad-hosts'] = {}; // structured map, not part of ALL_KEYS
   await config.set(prefs);
   await restore();
+  renderAdGroups();
   showStatus('Reset to defaults');
 };
 
@@ -234,8 +236,69 @@ const wireSearch = key => {
   });
 };
 
+/* ---- per-site blocked ad domains (structured map, edited live) ---- */
+const asAdMap = m => (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
+
+const renderAdGroups = async () => {
+  const root = $('ad-groups');
+  root.textContent = '';
+  const map = asAdMap((await config.get(['ad-hosts']))['ad-hosts']);
+  const sites = Object.keys(map).filter(s => (map[s] || []).length).sort();
+
+  if (!sites.length) {
+    const p = document.createElement('p');
+    p.className = 'ad-empty';
+    p.textContent = 'No ad domains blocked yet. Right-click an ad on any page to block its domain for that site.';
+    root.appendChild(p);
+    return;
+  }
+
+  for (const site of sites) {
+    const group = document.createElement('div');
+    group.className = 'ad-group';
+
+    const head = document.createElement('div');
+    head.className = 'ad-site';
+    head.textContent = site;
+    group.appendChild(head);
+
+    const ul = document.createElement('ul');
+    ul.className = 'ad-domains';
+    for (const domain of map[site]) {
+      const li = document.createElement('li');
+      li.className = 'ad-domain';
+
+      const name = document.createElement('span');
+      name.className = 'ad-domain-name';
+      name.textContent = domain;
+
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'ad-remove';
+      rm.textContent = '✕';
+      rm.title = 'Unblock ' + domain + ' on ' + site;
+      rm.setAttribute('aria-label', 'Unblock ' + domain + ' on ' + site);
+      rm.addEventListener('click', async () => {
+        const m = asAdMap((await config.get(['ad-hosts']))['ad-hosts']);
+        m[site] = (m[site] || []).filter(d => d !== domain);
+        if (!m[site].length) {
+          delete m[site];
+        }
+        await config.set({'ad-hosts': m});
+        renderAdGroups();
+      });
+
+      li.append(name, rm);
+      ul.appendChild(li);
+    }
+    group.appendChild(ul);
+    root.appendChild(group);
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   restore();
+  renderAdGroups();
 
   for (const key of SEARCH_KEYS) {
     wireSearch(key);

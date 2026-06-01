@@ -29,6 +29,8 @@ const config = {
   'silent': [],
   // popup-source hostnames that are silently blocked (no UI, counter only)
   'block-hosts': [],
+  // ad domains blocked per visited site: { siteBaseDomain: [adDomain, ...] }
+  'ad-hosts': {},
   'issue': true,
   'block-page-redirection': false,
   'block-automated-redirection': false,

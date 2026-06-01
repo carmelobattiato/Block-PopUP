@@ -1,11 +1,13 @@
 {
   "name": "Block PopUP",
   "description": "Strictly block popup requests on any website before they open.",
-  "version": "0.3",
+  "version": "0.5",
   "manifest_version": 3,
   "permissions": [
     "storage",
-    "scripting"
+    "scripting",
+    "contextMenus",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "<all_urls>"

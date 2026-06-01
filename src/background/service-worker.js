@@ -5,6 +5,8 @@ if (typeof importScripts !== 'undefined') {
   self.importScripts('badge.js');
   self.importScripts('history.js');
   self.importScripts('../content/policy.js'); // shared host matcher (PPolicy)
+  self.importScripts('../action/tld.js');     // registrable-domain parser (tldjs)
+  self.importScripts('adblock.js');           // context menu + ad-domain DNR rules
 }
 
 /* enable or disable the blocker */

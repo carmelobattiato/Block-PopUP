@@ -81,6 +81,69 @@ const renderHistory = list => {
   }
 };
 
+const asAdMap = m => (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
+
+/* ad domains blocked on the current site (per-site), with per-row removal */
+const renderAds = async tabId => {
+  const ul = $('ads-list');
+  const countEl = $('ads-count');
+  ul.textContent = '';
+
+  const site = page.site;
+  if (!site) {
+    countEl.textContent = '';
+    const li = document.createElement('li');
+    li.className = 'recent-empty';
+    li.textContent = 'Not available on this page';
+    ul.appendChild(li);
+    return;
+  }
+
+  const map = asAdMap((await config.get(['ad-hosts']))['ad-hosts']);
+  const list = Array.isArray(map[site]) ? map[site] : [];
+  countEl.textContent = list.length ? '(' + list.length + ')' : '';
+
+  if (!list.length) {
+    const li = document.createElement('li');
+    li.className = 'recent-empty';
+    li.textContent = 'No ad domains blocked on ' + site;
+    ul.appendChild(li);
+    return;
+  }
+
+  for (const domain of list) {
+    const li = document.createElement('li');
+    li.className = 'recent-item ad-item';
+
+    const host = document.createElement('span');
+    host.className = 'recent-host';
+    host.textContent = domain;
+    host.title = domain;
+
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'ad-remove';
+    rm.textContent = '✕';
+    rm.title = 'Unblock ' + domain + ' on ' + site;
+    rm.setAttribute('aria-label', 'Unblock ' + domain + ' on ' + site);
+    rm.addEventListener('click', async () => {
+      const m = asAdMap((await config.get(['ad-hosts']))['ad-hosts']);
+      m[site] = (m[site] || []).filter(d => d !== domain);
+      if (!m[site].length) {
+        delete m[site];
+      }
+      await config.set({'ad-hosts': m});
+      await renderAds(tabId);
+      if (typeof tabId === 'number') {
+        chrome.tabs.reload(tabId); // restore the page without the block
+      }
+    });
+
+    li.append(host, rm);
+    ul.appendChild(li);
+  }
+};
+
 const setSiteDisabled = disabled => {
   $('page').disabled = disabled;
   $('subs').disabled = disabled;
@@ -166,6 +229,7 @@ chrome.tabs.query({
 
     page.hostname = hostname;
     page.href = href;
+    page.site = hostname ? (tldjs.getDomain(hostname) || hostname) : '';
 
     const host = $('site-host');
     if (hostname) {
@@ -179,9 +243,12 @@ chrome.tabs.query({
       const prefs = await config.get(['top-hosts']);
       $('page').checked = prefs['top-hosts'].some(h => match(h, page.href)) ? false : true;
     }
+
+    renderAds(tab.id);
   }).catch(() => {
     setSiteDisabled(true);
     $('site-host').textContent = 'unavailable here';
+    renderAds(tab.id);
   });
 });
 

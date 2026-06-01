@@ -201,6 +201,34 @@ body {
   border-top: 1px solid var(--line);
 }
 
+.ad-item {
+  align-items: center;
+}
+
+.ad-remove {
+  flex: 0 0 auto;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--btn-bg);
+  color: var(--danger);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.ad-remove:hover {
+  background: rgba(229, 72, 77, .12);
+  border-color: rgba(229, 72, 77, .35);
+}
+
+.ad-remove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .recent-clear {
   display: block;
   width: calc(100% - 8px);

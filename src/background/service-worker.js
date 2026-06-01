@@ -9,6 +9,9 @@ if (typeof importScripts !== 'undefined') {
   self.importScripts('adblock.js');           // context menu + ad-domain DNR rules
 }
 
+/* tabId → expiry timestamp (ms). In-memory: resets if service worker is killed. */
+const snoozeMap = new Map();
+
 /* enable or disable the blocker */
 const activate = async () => {
   if (activate.busy) {
@@ -125,6 +128,20 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   if (sender.id !== chrome.runtime.id) {
     return;
   }
+  if (request.cmd === 'snooze-tab') {
+    const tabId = request.tabId;
+    const minutes = typeof request.minutes === 'number' ? request.minutes : 10;
+    snoozeMap.set(tabId, Date.now() + minutes * 60 * 1000);
+    response(true);
+    return true;
+  }
+  if (request.cmd === 'snooze-status') {
+    const tabId = request.tabId;
+    const exp = snoozeMap.get(tabId);
+    const minsLeft = (exp && exp > Date.now()) ? Math.ceil((exp - Date.now()) / 60000) : 0;
+    response(minsLeft);
+    return true;
+  }
   // history/clear come from the toolbar panel (an extension page, no sender.tab)
   if (request.cmd === 'get-history') {
     blockHistory.get(request.tabId).then(list => response(list));
@@ -145,6 +162,10 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       type: request.type,
       ts: Date.now()
     });
+    // snooze: history recorded, badge increments (via badge.js listener), but no card
+    if (snoozeMap.has(sender.tab.id) && Date.now() < snoozeMap.get(sender.tab.id)) {
+      return;
+    }
     config.get(['silent', 'block-hosts', 'issue', 'placement', 'width']).then(prefs => {
       if (prefs.issue === false) {
         return;
@@ -309,9 +330,13 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 chrome.tabs.onUpdated.addListener((tabId, info) => {
   if (info.url) {
     blockHistory.clear(tabId); // top-frame navigation -> fresh page history
+    snoozeMap.delete(tabId);
   }
 });
-chrome.tabs.onRemoved.addListener(tabId => blockHistory.clear(tabId));
+chrome.tabs.onRemoved.addListener(tabId => {
+  blockHistory.clear(tabId);
+  snoozeMap.delete(tabId);
+});
 
 /* commands */
 chrome.commands.onCommand.addListener(cmd => chrome.tabs.query({

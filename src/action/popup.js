@@ -177,6 +177,29 @@ chrome.tabs.query({
   const tab = tabs[0];
   page.tabId = tab.id;
 
+  // Snooze status
+  chrome.runtime.sendMessage({cmd: 'snooze-status', tabId: tab.id}, mins => {
+    void chrome.runtime.lastError;
+    if (typeof mins === 'number' && mins > 0) {
+      const btn = $('snooze');
+      if (btn) {
+        btn.textContent = 'Snoozed (' + mins + 'm left)';
+        btn.classList.add('is-snoozed');
+      }
+    }
+  });
+
+  // Snooze button click
+  const snoozeBtn = $('snooze');
+  if (snoozeBtn) {
+    snoozeBtn.onclick = () => {
+      chrome.runtime.sendMessage({cmd: 'snooze-tab', tabId: tab.id, minutes: 10}, () => {
+        void chrome.runtime.lastError;
+        window.close();
+      });
+    };
+  }
+
   // Blocked-on-this-tab count from the action badge
   chrome.action.getBadgeText({tabId: tab.id}, text => {
     const el = $('blocked-count');

@@ -239,7 +239,24 @@ const wireSearch = key => {
 /* ---- per-site blocked ad domains (structured map, edited live) ---- */
 const asAdMap = m => (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
 
+const DNR_LIMIT = 5000;
+const DNR_WARN = 4800;
+
+const renderDnrCounter = async () => {
+  const el = $('dnr-counter');
+  if (!el) return;
+  try {
+    const rules = await chrome.declarativeNetRequest.getDynamicRules();
+    const n = rules.length;
+    el.textContent = n + ' / ' + DNR_LIMIT + ' dynamic rules used';
+    el.classList.toggle('dnr-warn', n >= DNR_WARN);
+  } catch (e) {
+    el.textContent = '';
+  }
+};
+
 const renderAdGroups = async () => {
+  renderDnrCounter();
   const root = $('ad-groups');
   root.textContent = '';
   const map = asAdMap((await config.get(['ad-hosts']))['ad-hosts']);
@@ -286,6 +303,7 @@ const renderAdGroups = async () => {
         }
         await config.set({'ad-hosts': m});
         renderAdGroups();
+        renderDnrCounter();
       });
 
       li.append(name, rm);
@@ -299,6 +317,7 @@ const renderAdGroups = async () => {
 document.addEventListener('DOMContentLoaded', () => {
   restore();
   renderAdGroups();
+  renderDnrCounter();
 
   for (const key of SEARCH_KEYS) {
     wireSearch(key);

@@ -480,3 +480,6 @@ body {
   color: var(--accent);
   text-decoration: underline;
 }
+
+.dnr-counter { font-size: .8rem; color: var(--hint, #888); margin: 0 0 .5rem; }
+.dnr-counter.dnr-warn { color: #c0392b; font-weight: 600; }

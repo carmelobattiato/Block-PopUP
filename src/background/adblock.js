@@ -47,8 +47,10 @@ const adblock = (() => {
   const asMap = m => (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
 
   /* one block rule per site: requests to its ad domains are blocked only when
-     initiated from that site. resourceTypes omitted -> all but main_frame. */
-  function buildRules(map) {
+     initiated from that site. resourceTypes omitted -> all but main_frame.
+     An optional globalList produces an additional rule with no initiatorDomains
+     that blocks those ad domains on every site. */
+  function buildRules(map, globalList) {
     const rules = [];
     let id = 1;
     const m = asMap(map);
@@ -63,17 +65,44 @@ const adblock = (() => {
         });
       }
     }
+    const gDomains = (Array.isArray(globalList) ? globalList : []).filter(Boolean);
+    if (gDomains.length) {
+      rules.push({
+        id: id++,
+        priority: 1,
+        action: {type: 'block'},
+        condition: {requestDomains: gDomains}
+      });
+    }
     return rules;
   }
 
-  /* rebuild every dynamic rule from the stored per-site map */
+  /* rebuild every dynamic rule from the stored per-site map and global list;
+     skips the DNR write entirely when the rule set is already up to date. */
   async function syncRules() {
-    const {'ad-hosts': map} = await config.get(['ad-hosts']);
-    const existing = await chrome.declarativeNetRequest.getDynamicRules();
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: existing.map(r => r.id),
-      addRules: buildRules(map)
-    });
+    const data = await config.get(['ad-hosts', 'ad-hosts-global']);
+    const newRules = buildRules(data['ad-hosts'], data['ad-hosts-global']);
+    let existing = [];
+    try {
+      existing = await chrome.declarativeNetRequest.getDynamicRules();
+    } catch (e) {
+      console.warn('[Block PopUP] getDynamicRules failed:', e.message);
+      return;
+    }
+
+    // skip the DNR write if content is identical
+    if (JSON.stringify(existing) === JSON.stringify(newRules)) {
+      return;
+    }
+
+    try {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: existing.map(r => r.id),
+        addRules: newRules
+      });
+    } catch (e) {
+      console.warn('[Block PopUP] DNR rule update failed:', e.message);
+    }
   }
 
   /* context-menu click: block the ad's base domain on the current site only,
@@ -122,7 +151,7 @@ const adblock = (() => {
     syncRules();
   });
   config.changed(ps => {
-    if (ps['ad-hosts']) {
+    if (ps['ad-hosts'] || ps['ad-hosts-global']) {
       syncRules();
     }
   });

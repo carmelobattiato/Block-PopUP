@@ -31,6 +31,8 @@ const config = {
   'block-hosts': [],
   // ad domains blocked per visited site: { siteBaseDomain: [adDomain, ...] }
   'ad-hosts': {},
+  // ad domains blocked globally on every site: [adDomain, ...]
+  'ad-hosts-global': [],
   'issue': true,
   'block-page-redirection': false,
   'block-automated-redirection': false,

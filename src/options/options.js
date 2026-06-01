@@ -170,9 +170,11 @@ const resetDefaults = async () => {
     prefs[key] = config[key];
   }
   prefs['ad-hosts'] = {}; // structured map, not part of ALL_KEYS
+  prefs['ad-hosts-global'] = [];
   await config.set(prefs);
   await restore();
   renderAdGroups();
+  renderGlobalAdDomains();
   showStatus('Reset to defaults');
 };
 
@@ -314,9 +316,53 @@ const renderAdGroups = async () => {
   }
 };
 
+const renderGlobalAdDomains = async () => {
+  const el = $('ad-global-list');
+  if (!el) return;
+  el.textContent = '';
+  const {'ad-hosts-global': stored} = await config.get(['ad-hosts-global']);
+  const list = Array.isArray(stored) ? stored : [];
+
+  if (!list.length) {
+    const li = document.createElement('li');
+    li.className = 'ad-domain';
+    li.style.color = 'var(--hint, #888)';
+    li.textContent = 'No ad domains blocked globally yet.';
+    el.appendChild(li);
+    return;
+  }
+
+  for (const domain of [...list].sort()) {
+    const li = document.createElement('li');
+    li.className = 'ad-domain';
+
+    const name = document.createElement('span');
+    name.className = 'ad-domain-name';
+    name.textContent = domain;
+
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'ad-remove';
+    rm.textContent = '✕';
+    rm.title = 'Unblock ' + domain + ' everywhere';
+    rm.setAttribute('aria-label', 'Unblock ' + domain + ' everywhere');
+    rm.addEventListener('click', async () => {
+      const {'ad-hosts-global': s} = await config.get(['ad-hosts-global']);
+      const updated = (Array.isArray(s) ? s : []).filter(d => d !== domain);
+      await config.set({'ad-hosts-global': updated});
+      renderGlobalAdDomains();
+      renderDnrCounter();
+    });
+
+    li.append(name, rm);
+    el.appendChild(li);
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   restore();
   renderAdGroups();
+  renderGlobalAdDomains();
   renderDnrCounter();
 
   for (const key of SEARCH_KEYS) {

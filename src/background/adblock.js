@@ -13,7 +13,9 @@
 const adblock = (() => {
   'use strict';
 
-  const MENU_ID = 'pp-block-ad';
+  const MENU_ID      = 'pp-block-ad';
+  const MENU_SITE_ID = 'pp-block-ad-site';
+  const MENU_GLOB_ID = 'pp-block-ad-global';
 
   const baseDomain = host => (tldjs.getDomain(host) || host).toLowerCase();
 
@@ -137,6 +139,20 @@ const adblock = (() => {
     }
   }
 
+  async function onMenuClickedGlobal(info, tab) {
+    const domain = pickDomain(info);
+    if (!domain) return;
+    const {'ad-hosts-global': stored} = await config.get(['ad-hosts-global']);
+    const list = Array.isArray(stored) ? stored : [];
+    if (!list.includes(domain)) {
+      list.push(domain);
+      await config.set({'ad-hosts-global': list});
+    }
+    if (tab && typeof tab.id === 'number') {
+      chrome.tabs.reload(tab.id);
+    }
+  }
+
   function setupMenu() {
     chrome.contextMenus.removeAll(() => {
       chrome.contextMenus.create({
@@ -144,13 +160,27 @@ const adblock = (() => {
         title: 'Block ads from this domain',
         contexts: ['all']
       });
+      chrome.contextMenus.create({
+        id: MENU_SITE_ID,
+        parentId: MENU_ID,
+        title: 'On this site only',
+        contexts: ['all']
+      });
+      chrome.contextMenus.create({
+        id: MENU_GLOB_ID,
+        parentId: MENU_ID,
+        title: 'Everywhere (all sites)',
+        contexts: ['all']
+      });
     });
   }
 
   /* wiring */
   chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === MENU_ID) {
+    if (info.menuItemId === MENU_SITE_ID) {
       onMenuClicked(info, tab);
+    } else if (info.menuItemId === MENU_GLOB_ID) {
+      onMenuClickedGlobal(info, tab);
     }
   });
   chrome.runtime.onInstalled.addListener(() => {
@@ -167,5 +197,6 @@ const adblock = (() => {
     }
   });
 
-  return {MENU_ID, pickDomain, siteOf, buildRules, syncRules, onMenuClicked, setupMenu};
+  return {MENU_ID, MENU_SITE_ID, MENU_GLOB_ID, pickDomain, siteOf, buildRules, syncRules,
+          onMenuClicked, onMenuClickedGlobal, setupMenu};
 })();

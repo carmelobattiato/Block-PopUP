@@ -41,6 +41,11 @@ config.changed(prefs => {
   if (prefs.enabled) {
     icon();
   }
+  if (prefs['ad-hosts'] || prefs['ad-hosts-global']) {
+    chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+      if (tabs && tabs[0]) updateAdTitle(tabs[0].id, tabs[0].url);
+    });
+  }
 });
 
 chrome.runtime.onMessage.addListener((request, sender) => {
@@ -90,10 +95,39 @@ chrome.runtime.onMessage.addListener((request, sender) => {
           tabId: sender.tab.id,
           title: TITLES[state]
         });
+        updateAdTitle(sender.tab.id, sender.tab.url);
       });
     }
   }
 });
+
+async function updateAdTitle(tabId, tabUrl) {
+  if (!tabId || !tabUrl) return;
+  let site = '';
+  try {
+    site = tldjs.getDomain(new URL(tabUrl).hostname) || new URL(tabUrl).hostname;
+  } catch (e) { return; }
+  if (!site) return;
+
+  const data = await config.get(['ad-hosts', 'ad-hosts-global']);
+  const map = (data['ad-hosts'] && typeof data['ad-hosts'] === 'object' && !Array.isArray(data['ad-hosts']))
+    ? data['ad-hosts'] : {};
+  const perSite = Array.isArray(map[site]) ? map[site].length : 0;
+  const glob = Array.isArray(data['ad-hosts-global']) ? data['ad-hosts-global'].length : 0;
+  const total = perSite + glob;
+  if (!total) return;
+
+  chrome.action.getTitle({tabId}, existing => {
+    void chrome.runtime.lastError;
+    if (!existing) return;
+    // avoid appending duplicate suffix
+    const base = existing.split('\n— ')[0];
+    chrome.action.setTitle({
+      tabId,
+      title: base + '\n— ' + total + ' ad domain(s) blocked on this page'
+    });
+  });
+}
 
 // on startup (run once)
 {

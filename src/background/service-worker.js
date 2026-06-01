@@ -58,7 +58,7 @@ const activate = async () => {
         ...props
       }, {
         'id': 'isolated',
-        'js': ['/src/background/config.js', '/src/content/policy.js', '/src/content/notification.js', '/src/content/blocker.js'],
+        'js': ['/src/background/config.js', '/src/content/policy.js', '/src/content/notification.js', '/src/content/adblock-hide.js', '/src/content/blocker.js'],
         'world': 'ISOLATED',
         ...props
       }]);
@@ -91,7 +91,7 @@ const activate = async () => {
       ...props
     }, {
       'id': 'isolated',
-      'js': ['/src/background/config.js', '/src/content/policy.js', '/src/content/notification.js', '/src/content/blocker.js'],
+      'js': ['/src/background/config.js', '/src/content/policy.js', '/src/content/notification.js', '/src/content/adblock-hide.js', '/src/content/blocker.js'],
       'world': 'ISOLATED',
       ...props
     }]);

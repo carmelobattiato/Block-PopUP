@@ -359,11 +359,36 @@ const renderGlobalAdDomains = async () => {
   }
 };
 
+const renderStats = async () => {
+  const data = await config.get(['stats', 'ad-hosts', 'ad-hosts-global']);
+  const s = (data.stats && typeof data.stats === 'object') ? data.stats : {};
+
+  const popupsEl = $('stats-popups');
+  if (popupsEl) popupsEl.textContent = (s.popups || 0).toLocaleString();
+
+  const map = asAdMap(data['ad-hosts']);
+  const perSiteCount = Object.values(map).reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+  const adSiteEl = $('stats-ad-site');
+  if (adSiteEl) adSiteEl.textContent = perSiteCount.toLocaleString();
+
+  const globalCount = Array.isArray(data['ad-hosts-global']) ? data['ad-hosts-global'].length : 0;
+  const adGlobalEl = $('stats-ad-global');
+  if (adGlobalEl) adGlobalEl.textContent = globalCount.toLocaleString();
+
+  const sinceEl = $('stats-since');
+  if (sinceEl) {
+    sinceEl.textContent = s.firstTs
+      ? new Date(s.firstTs).toLocaleDateString()
+      : 'No data yet';
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   restore();
   renderAdGroups();
   renderGlobalAdDomains();
   renderDnrCounter();
+  renderStats();
 
   for (const key of SEARCH_KEYS) {
     wireSearch(key);
@@ -372,6 +397,11 @@ document.addEventListener('DOMContentLoaded', () => {
   $('save').addEventListener('click', save);
   $('export').addEventListener('click', exportSettings);
   $('reset').addEventListener('click', resetDefaults);
+  $('reset-stats').addEventListener('click', async () => {
+    await config.set({stats: {popups: 0, firstTs: null}});
+    renderStats();
+    showStatus('Statistics reset');
+  });
 
   $('import').addEventListener('click', () => $('import-file').click());
   $('import-file').addEventListener('change', e => {

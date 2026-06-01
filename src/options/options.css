@@ -483,3 +483,8 @@ body {
 
 .dnr-counter { font-size: .8rem; color: var(--hint, #888); margin: 0 0 .5rem; }
 .dnr-counter.dnr-warn { color: #c0392b; font-weight: 600; }
+
+.stats-panel { display: grid; gap: .4rem; margin: .5rem 0; }
+.stats-row { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; }
+.stats-label { color: var(--hint, #888); }
+.stats-value { font-weight: 600; }

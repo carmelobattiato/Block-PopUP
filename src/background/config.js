@@ -33,6 +33,8 @@ const config = {
   'ad-hosts': {},
   // ad domains blocked globally on every site: [adDomain, ...]
   'ad-hosts-global': [],
+  // lifetime stats: popups intercepted and when tracking started
+  'stats': {popups: 0, firstTs: null},
   'issue': true,
   'block-page-redirection': false,
   'block-automated-redirection': false,

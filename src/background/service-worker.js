@@ -162,6 +162,12 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       type: request.type,
       ts: Date.now()
     });
+    config.get(['stats']).then(({stats}) => {
+      const s = (stats && typeof stats === 'object') ? stats : {popups: 0, firstTs: null};
+      s.popups = (s.popups || 0) + 1;
+      if (!s.firstTs) s.firstTs = Date.now();
+      config.set({stats: s});
+    });
     // snooze: history recorded, badge increments (via badge.js listener), but no card
     if (snoozeMap.has(sender.tab.id) && Date.now() < snoozeMap.get(sender.tab.id)) {
       return;

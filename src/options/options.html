@@ -188,6 +188,33 @@
       </div>
     </section>
 
+    <!-- Statistics -->
+    <section class="card">
+      <h2 class="card-title">Statistics</h2>
+      <p class="card-hint">Lifetime counts since the extension was installed.</p>
+      <div class="stats-panel">
+        <div class="stats-row">
+          <span class="stats-label">Popups intercepted</span>
+          <span id="stats-popups" class="stats-value">—</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">Ad domains blocked (per-site)</span>
+          <span id="stats-ad-site" class="stats-value">—</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">Ad domains blocked (everywhere)</span>
+          <span id="stats-ad-global" class="stats-value">—</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">Tracking since</span>
+          <span id="stats-since" class="stats-value">—</span>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:.6rem">
+        <button type="button" id="reset-stats" class="btn btn-danger">Reset statistics</button>
+      </div>
+    </section>
+
     <!-- Backup -->
     <section class="card">
       <h2 class="card-title">Backup</h2>

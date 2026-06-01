@@ -3,6 +3,12 @@
   "description": "Strictly block popup requests on any website before they open.",
   "version": "0.5",
   "manifest_version": 3,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "block-popup@carmelobattiato",
+      "strict_min_version": "113.0"
+    }
+  },
   "permissions": [
     "storage",
     "scripting",

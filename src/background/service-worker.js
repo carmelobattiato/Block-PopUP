@@ -47,9 +47,13 @@ const activate = async () => {
         'matches': prefs.scope,
         'excludeMatches': th,
         'allFrames': true,
-        'matchOriginAsFallback': true,
         'runAt': 'document_start'
       };
+      // matchOriginAsFallback is Chrome/Edge only; Firefox ignores unknown keys
+      // but explicitly omitting it avoids browser console warnings on Firefox
+      if (typeof navigator === 'undefined' || !navigator.userAgent.includes('Firefox')) {
+        props.matchOriginAsFallback = true;
+      }
 
       await chrome.scripting.registerContentScripts([{
         'id': 'main',
@@ -81,9 +85,11 @@ const activate = async () => {
     const props = {
       'matches': prefs.scope,
       'allFrames': true,
-      'matchOriginAsFallback': true,
       'runAt': 'document_start'
     };
+    if (typeof navigator === 'undefined' || !navigator.userAgent.includes('Firefox')) {
+      props.matchOriginAsFallback = true;
+    }
     await chrome.scripting.registerContentScripts([{
       'id': 'main',
       'js': ['/src/content/page-hook.js'],

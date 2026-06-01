@@ -4,10 +4,6 @@ All notable changes to **Block PopUP** are documented in this file.
 
 ## [Unreleased]
 
----
-
-## [0.6] — 2026-06-02
-
 - `syncRules()` skips the declarativeNetRequest write when rules are unchanged (performance fix)
 - DNR rule quota counter ("X / 5000 dynamic rules used") in Options → Blocked ad domains; warning when approaching limit
 - Unit test suite for `adblock.js` pure functions (`pickDomain`, `siteOf`, `buildRules`) — 82 tests total
@@ -20,6 +16,7 @@ All notable changes to **Block PopUP** are documented in this file.
 - Filter list import: paste a URL to fetch EasyList / uBlock-format filter lists; parsed domains are added to the global blocklist
 - Firefox MV3 compatibility: `gecko.id` added to manifest, `matchOriginAsFallback` guarded by user-agent check
 
+---
 
 ## [0.5] — 2026-06-02
 

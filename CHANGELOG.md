@@ -6,6 +6,11 @@ All notable changes to **Block PopUP** are documented in this file.
 
 ---
 
+## [0.3] — 2026-06-01
+
+- Test suite expanded to 62 tests: functional coverage of the optional-sync config layer and the per-tab blocked history, plus non-functional checks (purity, determinism, robustness, and performance on large lists)
+
+
 ## [0.2] — 2026-05-29
 
 - Accessibility: the notification card now exposes ARIA roles, a screen-reader live region announcing blocked popups, a proper menu role with `aria-expanded`, visible focus rings, and an in-card focus trap when auto-focus is enabled

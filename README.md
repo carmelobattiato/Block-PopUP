@@ -40,7 +40,7 @@ in‑page card that never disrupts the site you're reading.
 | 🔘 | One‑tap actions: **Allow**, **Block**, **Close**, plus **⋯ More** → *Open in tab · Open here · Always allow* |
 | 🚫 | **Always‑block list** — silence a domain forever: no card, only the counter keeps counting |
 | ⏱️ | **Auto‑resolve** with a visible countdown on the chosen default action (Close / Block / …) |
-| 🧭 | **Toolbar panel**: global on/off, per‑site on/off (+ sub‑frames), blocked count, *Allow / Block last*, recent blocked list |
+| 🧭 | **Toolbar panel**: global on/off, per‑site on/off (+ sub‑frames), blocked count, *Allow / Block last*, recent blocked list, Snooze |
 | 🔀 | **Redirect protection** — optionally block sneaky page redirects (incl. automated ones) |
 | 🔒 | **Private by design** — no analytics, no remote requests, all settings in local storage |
 | 💾 | **Import / Export** your configuration as JSON |
@@ -48,6 +48,12 @@ in‑page card that never disrupts the site you're reading.
 | 🌀 | **Wildcard patterns** in domain lists — e.g. `*.example.com`, `tracker-*.net`, `*ads*` |
 | ↩️ | **Undo** — *Block this site* shows a 5‑second toast to revert an accidental block |
 | 🔁 | **Sync across devices** — optional switch mirrors all settings via `chrome.storage.sync` |
+| 🌍 | **Block ad domain everywhere** — right-click submenu: *On this site only* or *Everywhere (all sites)* |
+| 😴 | **Snooze** — suppress popup notification cards on the current tab for 10 minutes without disabling the blocker |
+| 📊 | **Statistics** — lifetime popup count and ad-domain totals in Options, with a Reset button |
+| 👁️ | **Cosmetic hiding** — CSS injected at page load hides ad elements even when the network request isn't caught |
+| 📋 | **Filter list import** — paste a URL to fetch EasyList / uBlock-format lists into the global blocklist |
+| 🦊 | **Firefox MV3** — loads on Firefox 113+ without modification |
 
 ---
 
@@ -114,7 +120,8 @@ flowchart TD
 Open the panel (🛡️ icon) → **Options**, organised in cards:
 
 - **General** — enable, show notifications, badge + colour, position (tl/tr/bl/br), **default action** (Do nothing / Close / Block / Open in tab / Open here), auto‑resolve seconds, max notifications, width.
-- **Domain lists** — *allowed popup sources*, *disabled sites*, *always‑blocked domains*, **blocked ad domains**. Each list has a filter box for quick lookup in long lists.
+- **Domain lists** — *allowed popup sources*, *disabled sites*, *always‑blocked domains*, **blocked ad domains** (per-site + global). Each list has a filter box for quick lookup in long lists.
+- **Statistics** — lifetime counts for popups intercepted and ad domains blocked, with a Reset button.
 - **Redirect protection** — block page redirects and automated redirects.
 - **Sync** — mirror all settings across devices via `chrome.storage.sync` (optional; gracefully handles quota limits).
 - **Backup** — Import / Export / Reset to defaults.
@@ -137,6 +144,7 @@ src/
 │  ├─ blocker.js                # ISOLATED world — redirect guard, record/replay, messaging
 │  ├─ policy.js                 # pure block-decision engine (unit-tested)
 │  ├─ notification.js           # ISOLATED world — Shadow-DOM notification card
+│  ├─ adblock-hide.js           # ISOLATED world — CSS injection hiding blocked ad-domain elements
 │  ├─ disabled.js               # marks excluded top sites
 │  └─ probe.js                  # validates match patterns
 ├─ action/                      # toolbar panel (popup.html/js/css) + tld.js

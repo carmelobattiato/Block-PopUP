@@ -6,6 +6,21 @@ All notable changes to **Block PopUP** are documented in this file.
 
 ---
 
+## [0.6] — 2026-06-02
+
+- `syncRules()` skips the declarativeNetRequest write when rules are unchanged (performance fix)
+- DNR rule quota counter ("X / 5000 dynamic rules used") in Options → Blocked ad domains; warning when approaching limit
+- Unit test suite for `adblock.js` pure functions (`pickDomain`, `siteOf`, `buildRules`) — 82 tests total
+- Global ad blocking: right-click context menu now has a submenu — "On this site only" vs "Everywhere (all sites)"
+- Options → Blocked ad domains: new "Blocked everywhere" section with per-entry removal for globally blocked domains
+- Snooze: toolbar panel "Snooze 10 min" button suppresses popup notification cards on the current tab temporarily; resets on navigation
+- Statistics dashboard in Options: lifetime popup count, per-site and global ad-domain totals, tracking start date, Reset button
+- Badge tooltip shows how many ad domains are blocked on the current page
+- Cosmetic element hiding: content script injects CSS to visually hide elements from blocked ad domains at page load
+- Filter list import: paste a URL to fetch EasyList / uBlock-format filter lists; parsed domains are added to the global blocklist
+- Firefox MV3 compatibility: `gecko.id` added to manifest, `matchOriginAsFallback` guarded by user-agent check
+
+
 ## [0.5] — 2026-06-02
 
 - Block ads by domain, per site: right-click an ad and choose “Block ads from this domain” to block that ad domain (e.g. `doubleclick.net`) only on the site you are visiting (declarativeNetRequest scoped by initiator). The same ad domain still loads on other sites. Review and remove blocked domains for the current page from the toolbar panel, or for all sites under Options → Blocked ad domains.

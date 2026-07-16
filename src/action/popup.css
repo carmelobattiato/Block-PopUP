@@ -25,6 +25,16 @@
     --shadow: 0 10px 34px rgba(0, 0, 0, .5);
     --track-off: rgba(255, 255, 255, .22);
   }
+
+  .recent-item--notified .recent-badge {
+    background: #1e3a5f;
+    color: #93c5fd;
+  }
+
+  .recent-item--silent .recent-badge {
+    background: #2d3139;
+    color: #9aa3b2;
+  }
 }
 
 * {
@@ -191,6 +201,30 @@ body {
 .recent-when {
   flex: 0 0 auto;
   font-size: 10.5px;
+  color: var(--muted);
+}
+
+.recent-badge {
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.recent-item--notified .recent-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.recent-item--silent .recent-badge {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.recent-item--silent .recent-host {
   color: var(--muted);
 }
 

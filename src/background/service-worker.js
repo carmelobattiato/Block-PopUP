@@ -162,49 +162,51 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     return;
   }
   if (request.cmd === 'popup-request') {
-    blockHistory.add(sender.tab.id, {
-      hostname: request.hostname,
-      href: request.href,
-      type: request.type,
-      ts: Date.now()
-    });
-    config.get(['stats']).then(({stats}) => {
-      const s = (stats && typeof stats === 'object') ? stats : {popups: 0, firstTs: null};
+    const snoozed = snoozeMap.has(sender.tab.id) && Date.now() < snoozeMap.get(sender.tab.id);
+    config.get(['stats', 'silent', 'block-hosts', 'issue', 'placement', 'width']).then(prefs => {
+      // update lifetime stats
+      const s = (prefs.stats && typeof prefs.stats === 'object') ? prefs.stats : {popups: 0, firstTs: null};
       s.popups = (s.popups || 0) + 1;
       if (!s.firstTs) s.firstTs = Date.now();
       config.set({stats: s});
-    });
-    // snooze: history recorded, badge increments (via badge.js listener), but no card
-    if (snoozeMap.has(sender.tab.id) && Date.now() < snoozeMap.get(sender.tab.id)) {
-      return;
-    }
-    config.get(['silent', 'block-hosts', 'issue', 'placement', 'width']).then(prefs => {
-      if (prefs.issue === false) {
-        return;
+
+      // decide whether to show the notification card
+      let showCard = !snoozed && prefs.issue !== false;
+      if (showCard) {
+        const src = request.hostname;
+        const blockList = prefs['block-hosts'] || [];
+        if (src && PPolicy.matchesHost(src, blockList)) {
+          showCard = false;
+        } else {
+          const {hostname} = new URL(sender.tab.url);
+          if (PPolicy.matchesHost(hostname, blockList)) {
+            showCard = false;
+          } else if (prefs.silent.includes(hostname)) {
+            showCard = false;
+          }
+        }
       }
-      // permanently blocked popup source: skip the notification UI.
-      // badge.js still increments the counter on this same message.
-      const src = request.hostname;
-      if (src && PPolicy.matchesHost(src, prefs['block-hosts'] || [])) {
-        return;
-      }
-      const {hostname} = new URL(sender.tab.url);
-      if (prefs.silent.includes(hostname)) {
-        return;
-      }
-      // render the notification overlay in the TOP frame (frameId 0).
-      // the originating frameId is preserved so "Allow" routes back to the
-      // right frame for the record/replay step.
-      chrome.tabs.sendMessage(sender.tab.id, {
-        cmd: 'show-notification',
-        type: request.type,
-        href: request.href,
+
+      blockHistory.add(sender.tab.id, {
         hostname: request.hostname,
-        id: request.id,
-        frameId: sender.frameId,
-        placement: prefs.placement,
-        width: prefs.width
-      }, {frameId: 0}, () => chrome.runtime.lastError);
+        href: request.href,
+        type: request.type,
+        ts: Date.now(),
+        silent: !showCard
+      });
+
+      if (showCard) {
+        chrome.tabs.sendMessage(sender.tab.id, {
+          cmd: 'show-notification',
+          type: request.type,
+          href: request.href,
+          hostname: request.hostname,
+          id: request.id,
+          frameId: sender.frameId,
+          placement: prefs.placement,
+          width: prefs.width
+        }, {frameId: 0}, () => chrome.runtime.lastError);
+      }
     });
   }
   // popup is accepted

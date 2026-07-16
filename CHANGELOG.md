@@ -6,6 +6,15 @@ All notable changes to **Block PopUP** are documented in this file.
 
 ---
 
+## [0.7] — 2026-07-17
+
+- Silent-block tracking: each blocked popup now records whether a notification card was shown (`notified`) or the block was silent (`silent`) — distinguishable in the toolbar panel "Recent blocked" list
+- Toolbar panel history: entries now carry a coloured badge — blue **notified** for popups where the card appeared, grey **silent** for popups suppressed by the always-block list or the silent list; dark-mode palette included
+- `service-worker.js` refactored: `popup-request` handler merges stats update and notification decision into a single `config.get` call; `silent` flag is determined before writing to history so the stored entry is always accurate
+- Fixed: `block-hosts` check now also matches the parent-page hostname (not only the popup destination), so adding a source site to always-blocked silences all its outgoing popups even when the destination is unknown
+
+---
+
 ## [0.6] — 2026-06-02
 
 - `syncRules()` skips the declarativeNetRequest write when rules are unchanged (performance fix)

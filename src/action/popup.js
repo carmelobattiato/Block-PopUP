@@ -65,18 +65,22 @@ const renderHistory = list => {
   // newest first
   for (const entry of [...list].reverse()) {
     const li = document.createElement('li');
-    li.className = 'recent-item';
+    li.className = 'recent-item' + (entry.silent ? ' recent-item--silent' : ' recent-item--notified');
     li.title = entry.href || '';
 
     const host = document.createElement('span');
     host.className = 'recent-host';
     host.textContent = entry.hostname || entry.href || '(unknown)';
 
+    const badge = document.createElement('span');
+    badge.className = 'recent-badge';
+    badge.textContent = entry.silent ? 'silent' : 'notified';
+
     const when = document.createElement('span');
     when.className = 'recent-when';
     when.textContent = timeAgo(entry.ts);
 
-    li.append(host, when);
+    li.append(host, badge, when);
     ul.appendChild(li);
   }
 };
